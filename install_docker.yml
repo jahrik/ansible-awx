@@ -1,0 +1,33 @@
+---
+- hosts: all
+  become: true
+  tasks:
+
+    - name: add docker engine repo key
+      apt_key:
+        keyserver: p80.pool.sks-keyservers.net
+        id: 58118E89F3A912897C070ADBF76221572C52609D
+        state: present
+
+    - name: add docker engine repo
+      apt_repository:
+        repo: deb https://apt.dockerproject.org/repo ubuntu-xenial main
+        state: present
+        filename: docker
+        update_cache: yes
+
+    - name: install docker-engine
+      apt:
+        name: docker-engine
+        state: present
+        update_cache: yes
+
+    - name: install python-pip
+      apt:
+        name: python-pip
+        state: present
+        update_cache: yes
+
+    - name: install docker-py
+      pip:
+        name: docker-py
