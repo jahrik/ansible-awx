@@ -1,0 +1,1 @@
+/home/wgill/ansible/home_lab/ghost/trialing_ansible_awx.md
