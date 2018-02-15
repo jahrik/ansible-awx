@@ -1,0 +1,29 @@
+---
+- hosts: all
+  become: true
+  become_method: sudo
+  tasks:
+
+  - name: Clone awx from github
+    git:
+      repo: https://github.com/ansible/awx.git
+      dest: /opt/awx/
+      version: devel
+
+  - name: Check to see if AWX is running on port 80 and returns a status 200
+    ignore_errors: true
+    uri:
+      url: http://localhost:80
+    register: localhost
+
+  - name: output status code
+    debug:
+      var: localhost.status
+
+  - name: Install and run AWX if it's not already running on port 80
+    command: ansible-playbook -i inventory install.yml
+    args:
+      chdir: /opt/awx/installer/
+    when:
+      - localhost is defined
+      - localhost.status != 200

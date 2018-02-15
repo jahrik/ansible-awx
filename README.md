@@ -1,6 +1,10 @@
 # Trialing Ansible AWX
 
-The upstream for Ansible Tower , [awx project](https://www.ansible.com/products/awx-project), is in development and worth checking out.  It's pretty painless to get up and running in a testing environment for trial purposes.  You'll need a system running `docker`, `ansible`, and a python dependency, `docker-py`.  There are quite a few ways to set this up, but I'll go over one way, using vagrant and virtualbox to spin up an ubuntu 16.04 machine and walk through installation and some basic usage after it's up and running.  If you already have a linux machine ready, skip the Vagrant lab.
+The upstream for Ansible Tower , [awx project](https://www.ansible.com/products/awx-project), is in development and worth checking out.  It's pretty painless to get up and running in a testing environment for trial purposes.  You'll need a system running `docker`, `ansible`, and a python dependency, `docker-py`.  There are quite a few ways to set this up, but I'll go over one way, using vagrant and virtualbox to spin up an ubuntu 16.04 machine and walk through installation and some basic usage after it's up and running.  If you already have a linux machine ready, skip the Vagrant lab setup and go straight into Installation.
+
+I've been using chef for a few years now and ansible for about half that time.  I really like how the two compliment each other.  Chef works great for tasks that run constantly, like adding users, and default packages to a newly bootstrapped vm.  I've found that ansible will do just about everything chef can do and found one case that it excels at.  In orchestrating a docker swarm cluster, I tried tackling the challenge first in chef.  When initializing the swarm, the master node creates a unique key that needs applied to each of the other nodes to bring them into the swarm.  With chef, there wasn't an immediate way available for handling this problem without the use of DinamoDB.  Where as in ansible, I was able to save this value to a variable and push it to every node.
+
+So far, I have just been running all of my ansible playbooks from my laptop.  The day has come that I need to centralize all of this config management somewhere the rest of my collogues can see it and join in on the ansible fun I've been having.  I cannot afford to pay for Tower, so I've decided to see what AWX can do for me.
 
 ## Requirements
 
@@ -10,13 +14,9 @@ The upstream for Ansible Tower , [awx project](https://www.ansible.com/products/
 * [install docker](https://docs.docker.com/install/)
 * [install ansible 2.4+](http://docs.ansible.com/ansible/latest/intro_installation.html)
 
-## Vagrant lab
+## Vagrant
 
-[clone ansible/awx](https://github.com/ansible/awx) and cd into the new project
-
-    git clone https://github.com/ansible/awx.git
-
-    cd awx
+Spin up a couple of virtualbox vms to create a lab environment to test out ansible awx.  One node to host Ansible AWX and one to play the role of a lab host.  If you would like to follow along you can find all of the examples [on github](https://github.com/jahrik/ansible-awx).
 
 Check to see what boxes you have available first and then initialize a new Vagrant file running ubuntu 16.04.
 
@@ -221,7 +221,7 @@ Install docker-engine on ansible-awx host
     ...
     ansible-awx                : ok=4    changed=3    unreachable=0    failed=0
 
-### Pip requirements
+### Pip
 
 Install pip and docker-py
 
@@ -249,3 +249,70 @@ Run install_docker.yml again to install pip dependencies
     ...
     ...
     ansible-awx                : ok=6    changed=2    unreachable=0    failed=0
+
+
+### AWX
+
+[Clone ansible/awx](https://github.com/ansible/awx) and cd into the new folder.
+
+    git clone https://github.com/ansible/awx.git
+
+    cd awx
+
+Run the install playbook.
+
+    cd installer
+
+    ansible-playbook -i inventory install.yml
+
+And to handle this with ansible instead, here is an example playbook.
+
+**install_awx.yml**
+
+    ---
+    - hosts: all
+      become: true
+      become_method: sudo
+      tasks:
+
+      - name: Clone awx from github
+        git:
+          repo: https://github.com/ansible/awx.git
+          dest: /opt/awx/
+          version: devel
+
+      - name: Check to see if AWX is running on port 80 and returns a status 200
+        ignore_errors: true
+        uri:
+          url: http://localhost:80
+        register: localhost
+
+      - name: output status code
+        debug:
+          var: localhost.status
+
+      - name: Install and run AWX if it's not already running on port 80
+        command: ansible-playbook -i inventory install.yml
+        args:
+          chdir: /opt/awx/installer/
+        when:
+          - localhost is defined
+          - localhost.status != 200
+
+Run it to install and start up AWX on the ansible-awx host.
+
+    ansible-playbook -i inventory.ini -l ansible-awx install_awx.yml                                
+    ...
+    ...
+    ansible-awx                : ok=4    changed=2    unreachable=0    failed=0
+
+Browse to [192.168.33.11:80](http://192.168.33.11:80) to checkout it out!
+![virtualbox](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_upgrading.png?raw=true)
+
+Use the default creds to log in for the first time.
+* admin
+* password
+![virtualbox](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_login.png?raw=true)
+
+A brand new installation of AWX :-)
+![virtualbox](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_home.png?raw=true)
