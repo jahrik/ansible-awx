@@ -392,4 +392,4 @@ You can see from the output that it is leaving the ansible-awx node alone and in
 
 And just like that, there is another fresh instance of AWX installed on the ansible-lab node at [192.168.33.12:80](http://192.168.33.12:80)
 
-![awx_run](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_lab_awx.png?raw=true)
+![awx_lab_awx](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_lab_awx.png?raw=true)
