@@ -1,10 +1,10 @@
 # Trialing Ansible AWX
 
-The upstream for Ansible Tower , [awx project](https://www.ansible.com/products/awx-project), is in development and worth checking out.  It's pretty painless to get up and running in a testing environment for trial purposes.  You'll need a system running `docker`, `ansible`, and a python dependency, `docker-py`.  There are quite a few ways to set this up, but I'll go over one way, using vagrant and virtualbox to spin up an ubuntu 16.04 machine and walk through installation and some basic usage after it's up and running.  If you already have a linux machine ready, skip the Vagrant lab setup and go straight into Installation.
+The upstream for Ansible Tower, [awx project](https://www.ansible.com/products/awx-project), is in development and worth checking out.  It's pretty painless to get up and running in a testing environment for trial purposes.  You'll need a system running `Docker`, `Ansible`, and a Python dependency, `docker-py`.  There are quite a few ways to set this up, I'll go over one way using Vagrant and Virtualbox to spin up an Ubuntu 16.04 machine and walk through installation and some basic usage.  If you already have a linux machine ready, skip the Vagrant lab setup and go straight to Installation.
 
-I've been using chef for a few years now and ansible for about half that time.  I really like how the two compliment each other.  Chef works great for tasks that run constantly, like adding users, and default packages to a newly bootstrapped vm.  I've found that ansible will do just about everything chef can do and found one case that it excels at.  In orchestrating a docker swarm cluster, I tried tackling the challenge first in chef.  When initializing the swarm, the master node creates a unique key that needs applied to each of the other nodes to bring them into the swarm.  With chef, there wasn't an immediate way available for handling this problem without the use of DinamoDB.  Where as in ansible, I was able to save this value to a variable and push it to every node.
+I've been using Chef for a few years now and Ansible for about half that time; I really like how the two compliment each other.  Chef works great for tasks that run constantly, like adding users and default packages to a newly bootstrapped vm.  I've found that Ansible will do just about everything Chef can do and found one case in which Ansible excels.  While orchestrating a docker swarm cluster, I tried tackling the challenge first in Chef.  When initializing the swarm, the master node creates a unique key that needs to be applied to each of the other nodes to bring them into the swarm.  With Chef, there wasn't an immediate way available for handling this problem without the use of DinamoDB.  Where as in Ansible, I was able to save this value to a variable and push it to every node.
 
-So far, I have just been running all of my ansible playbooks from my laptop.  The day has come that I need to centralize all of this config management somewhere the rest of my collogues can see it and join in on the ansible fun I've been having.  I cannot afford to pay for Tower, so I've decided to see what AWX can do for me.
+So far, I have just been running all of my Ansible playbooks from my laptop.  The day has come that I need to centralize all of this config management somewhere my collogues can see it and join the Ansible party.  I cannot afford to pay for Tower, so I've decided to see what AWX can do for me.
 
 Table of Contents
 =================
@@ -16,7 +16,7 @@ Table of Contents
     * [Docker](#docker)
     * [Pip](#pip)
     * [AWX](#awx)
-      * [EXAMPLE](#example)
+      * [Example](#example)
 
 ## Requirements
 
@@ -28,9 +28,9 @@ Table of Contents
 
 ## Vagrant
 
-Spin up a couple of virtualbox vms to create a lab environment to test out ansible awx.  One node to host Ansible AWX and one to play the role of a lab host.  If you would like to follow along you can find all of the examples [on github](https://github.com/jahrik/ansible-awx).
+Spin up a couple of virtualbox vms to create a lab environment to test out Ansible AWX.  One node to host Ansible AWX and one to play the role of a lab host.  If you would like to follow along you can find all of the examples [on github](https://github.com/jahrik/ansible-awx).
 
-Check to see what boxes you have available first and then initialize a new Vagrant file running ubuntu 16.04.
+First, check to see what boxes you have available, then initialize a new Vagrant file running Ubuntu 16.04.
 
     vagrant box list                                                                                           
 
@@ -102,7 +102,7 @@ You can also open virtualbox and see your newly created vms through the gui and 
 
 ## Installation
 
-With a fresh installation of ubuntu install any requirements found on the [awx install page for docker-compose](https://github.com/ansible/awx/blob/devel/INSTALL.md#docker-or-docker-compose).  At the time of this writing it includes ansible 2.4+, so we'll need a repo to get that.  I'll ssh into the vagrant box to go over the installation steps.
+With a fresh installation of Ubuntu install any requirements found on the [AWX install page for docker-compose](https://github.com/ansible/awx/blob/devel/INSTALL.md#docker-or-docker-compose).  At the time of this writing it includes Ansible 2.4+, so we'll need a repo to get that.  I'll ssh into the Vagrant box to go over the installation steps.
 
 ### Ansible
 
@@ -114,7 +114,7 @@ Install the [latest release via apt ubuntu](http://docs.ansible.com/ansible/late
     sudo apt-get update
     sudo apt-get install ansible
 
-If I have ansible already installed on my workstation I can handle the above with an ansible playbook to provision the new vms.  First I'll create an inventory.ini file to point ansible at my virtual machines.
+If I have Ansible already installed on my workstation I can handle the above with an Ansible playbook to provision the new vms.  First I'll create an inventory.ini file to point Ansible at my virtual machines.
 NOTE: the default creds for vagrant are used here for simplicity.  These creds are for a lab environment and not expected to be used in production.
 
 **inventory.ini**
@@ -129,7 +129,7 @@ NOTE: the default creds for vagrant are used here for simplicity.  These creds a
     ansible_ssh_pass=vagrant
 
 
-With the inventory.ini file in place I can now point ansible at my new vms
+With the inventory.ini file in place I can now point Ansible at my new vms
 
     ansible -i inventory.ini all -m ping
 
@@ -142,7 +142,7 @@ With the inventory.ini file in place I can now point ansible at my new vms
         "ping": "pong"
     }
 
-I would then write a file to handle the above installation of ansible
+Then write a file to handle the above installation of Ansible
 
 **install_ansible.yml**
 
@@ -169,7 +169,7 @@ Finally, run the playbook against the box
     ...
     ansible-awx                : ok=3    changed=2    unreachable=0    failed=0
 
-Verify the version of ansible running on ansible-awx.  Hopefully, it is 2.4 or higher.
+Verify the version of Ansible running on ansible-awx.  Hopefully, it is 2.4 or higher.
 
     ansible -i inventory.ini ansible-awx -a 'ansible --version'
 
@@ -277,7 +277,7 @@ Run the install playbook.
 
     ansible-playbook -i inventory install.yml
 
-And to handle this with ansible instead, here is an example playbook.
+And to handle this with Ansible instead, here is an example playbook.
 
 **install_awx.yml**
 
@@ -330,7 +330,7 @@ Use the default creds to log in for the first time.
 A brand new installation of AWX :-)
 ![awx_home](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_home.png?raw=true)
 
-#### EXAMPLE
+#### Example
 Start by clicking on Credentials to ADD a vagrant user and password for the lab boxes.  By default the `vagrant` user has a password of `vagrant`.  From the 'Credential Type' drop down chose `Machine`
 
 If you want to use an ssh key from a vagrant box you can find it here.
