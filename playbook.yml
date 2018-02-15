@@ -1,0 +1,4 @@
+---
+- include: install_ansible.yml
+- include: install_docker.yml
+- include: install_awx.yml
