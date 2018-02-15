@@ -16,6 +16,7 @@ Table of Contents
     * [Docker](#docker)
     * [Pip](#pip)
     * [AWX](#awx)
+      * [EXAMPLE](#example)
 
 ## Requirements
 
@@ -318,16 +319,16 @@ Run it to install and start up AWX on the ansible-awx host.
     ansible-awx                : ok=4    changed=2    unreachable=0    failed=0
 
 Browse to [192.168.33.11:80](http://192.168.33.11:80) to checkout it out!
-![virtualbox](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_upgrading.png?raw=true)
+![awx_upgrading](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_upgrading.png?raw=true)
 
 Use the default creds to log in for the first time.
 * admin
 * password
 
-![virtualbox](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_login.png?raw=true)
+![awx_login](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_login.png?raw=true)
 
 A brand new installation of AWX :-)
-![virtualbox](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_home.png?raw=true)
+![awx_home](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_home.png?raw=true)
 
 #### EXAMPLE
 Start by clicking on Credentials to ADD a vagrant user and password for the lab boxes.  By default the `vagrant` user has a password of `vagrant`.  From the 'Credential Type' drop down chose `Machine`
@@ -336,15 +337,15 @@ If you want to use an ssh key from a vagrant box you can find it here.
 
     cat .vagrant/machines/ansible-awx/virtualbox/private_key
 
-![virtualbox](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_vagrant_creds.png?raw=true)
+![awx_vagrant_creds](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_vagrant_creds.png?raw=true)
 
 Click on Inventory and ADD a new one to add the two virtualbox vms to it.
-![virtualbox](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_inventory.png?raw=true)
+![awx_inventory](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_inventory.png?raw=true)
 
 * Create a `vagrant` inventory and click save.
 * Add the vagrant hosts to the vagrant inventory
 
-![virtualbox](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_hosts.png?raw=true)
+![awx_hosts](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_hosts.png?raw=true)
 
 Create a new project and name it ansible-awx
 
@@ -352,7 +353,7 @@ Create a new project and name it ansible-awx
 * SCM type: Git
 * SCM url: https://github.com/jahrik/ansible-awx.git
 
-![virtualbox](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_project.png?raw=true)
+![awx_project](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_project.png?raw=true)
 
 Save it and click on the little cloudy, down-arrow button to "Start and SCM update"
 
@@ -364,8 +365,31 @@ Create a playbook.yml file that encompasses the 3 things we did above:
 **playbook.yml**
 
     ---
-    - include: install_ansible.yml
-    - include: install_docker.yml
-    - include: install_awx.yml
+    - import_playbook: install_ansible.yml
+    - import_playbook: install_docker.yml
+    - import_playbook: install_awx.yml
 
 With that, we can create a Project in AWX that will run this playbook against whatever node we point it at.  Here's what that will look like.
+* name:        ansible-awx
+* job type:    Run
+* inventory:   vagrant
+* project:     ansible-awx
+* playbook:    playbook.yml
+* credentials: vagrant
+
+![awx_job_template](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_job_template.png?raw=true)
+
+Now, fire it off at both nodes to install Ansible AWX on ansible-awx and ansible-lab.
+The ansible-awx host will be ignored because it's already configured, but the ansible-lab box will install everything at once and bring up AWX from start to finish with one playbook and the push of a button.
+
+Navigate to Portal Mode and push the little rocket ship button for the ansible-awx project to kick it off.  Over to the right you will see it start up and can click on the ansible-awx link to follow along as the job runs.
+
+![awx_portal](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_portal.png?raw=true)
+
+You can see from the output that it is leaving the ansible-awx node alone and installing new on the ansible-lab node.
+
+![awx_run](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_run.png?raw=true)
+
+And just like that, there is another fresh instance of AWX installed on the ansible-lab node at [192.168.33.12:80](http://192.168.33.12:80)
+
+![awx_run](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_lab_awx.png?raw=true)
