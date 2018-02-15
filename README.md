@@ -369,7 +369,7 @@ Create a playbook.yml file that encompasses the 3 things we did above:
     - import_playbook: install_docker.yml
     - import_playbook: install_awx.yml
 
-With that, we can create a Project in AWX that will run this playbook against whatever node we point it at.  Here's what that will look like.
+With that, we can create a 'Job Template' in AWX that will run this playbook against whatever node we point it at.  Here's what that will look like.
 * name:        ansible-awx
 * job type:    Run
 * inventory:   vagrant
