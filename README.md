@@ -323,6 +323,7 @@ Browse to [192.168.33.11:80](http://192.168.33.11:80) to checkout it out!
 Use the default creds to log in for the first time.
 * admin
 * password
+
 ![virtualbox](https://github.com/jahrik/home_lab/blob/master/ghost/images/awx_login.png?raw=true)
 
 A brand new installation of AWX :-)
