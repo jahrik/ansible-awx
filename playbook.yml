@@ -1,4 +1,4 @@
 ---
-- include: install_ansible.yml
-- include: install_docker.yml
-- include: install_awx.yml
+- import_playbook: install_ansible.yml
+- import_playbook: install_docker.yml
+- import_playbook: install_awx.yml
