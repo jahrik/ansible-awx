@@ -14,16 +14,15 @@
     ignore_errors: true
     uri:
       url: http://localhost:80
-    register: localhost
+    register: awx_check
 
   - name: output status code
     debug:
-      var: localhost.status
+      var: awx_check.status
 
   - name: Install and run AWX if it's not already running on port 80
     command: ansible-playbook -i inventory install.yml
     args:
       chdir: /opt/awx/installer/
     when:
-      - localhost is defined
-      - localhost.status != 200
+      - awx_check.status is not defined or awx_check.status != 200
