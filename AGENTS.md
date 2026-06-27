@@ -6,8 +6,6 @@ This file provides guidance to AI coding agents when working with code in this r
 
 Vagrant lab + Ansible playbooks for deploying [Ansible AWX](https://github.com/ansible/awx) (open-source Ansible Tower) on Ubuntu 16.04. Spins up two VirtualBox VMs and provisions them with Ansible, Docker, and AWX.
 
-No Molecule tests — this is a standalone lab, not an Ansible role.
-
 ## Lab Setup
 
 ```bash
@@ -41,10 +39,14 @@ ansible-playbook -i inventory.ini playbook.yml
 
 AWX UI: `http://192.168.33.11` — default credentials: `admin` / `password`
 
-## Linting
+## Testing
 
 ```bash
+uv sync
+source .venv/bin/activate
 yamllint .
+ansible-lint
+molecule test
 ```
 
 ## Notes
