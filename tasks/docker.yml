@@ -1,7 +1,17 @@
 ---
 # Docker Engine itself comes from the geerlingguy.docker role dependency
-# (see meta/main.yml). All that's left here is the Python Docker SDK that
-# the AWX installer's docker-compose-based playbook needs at runtime.
+# (see meta/main.yml). All that's left here is pip itself and the Python
+# Docker SDK that the AWX installer's docker-compose-based playbook needs
+# at runtime.
+
+- name: Install python3-pip
+  ansible.builtin.apt:
+    name: python3-pip
+    state: present
+    update_cache: true
+  tags:
+    - awx
+    - awx:docker
 
 - name: Install Python Docker SDK required by the AWX installer
   ansible.builtin.pip:
