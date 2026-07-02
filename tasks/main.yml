@@ -1,0 +1,22 @@
+---
+- name: Install Docker prerequisites for the AWX installer
+  ansible.builtin.include_tasks:
+    file: docker.yml
+    apply:
+      tags:
+        - awx
+        - awx:docker
+  tags:
+    - awx
+    - awx:docker
+
+- name: Clone and install AWX
+  ansible.builtin.include_tasks:
+    file: awx.yml
+    apply:
+      tags:
+        - awx
+        - awx:install
+  tags:
+    - awx
+    - awx:install

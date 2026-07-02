@@ -1,56 +1,65 @@
 # AGENTS.md
 
-This file provides guidance to AI coding agents when working with code in this repository.
+Guidance for AI agents working in `ansible-awx`.
+
+## Obsolescence note
+
+**The compose-based AWX install this role stages is obsolete upstream.** The AWX project has
+moved to the [AWX Operator](https://github.com/ansible/awx-operator) running on Kubernetes;
+`ansible/awx`'s `installer/install.yml` docker-compose path is no longer the supported deployment
+method. This repo was converted from a flat playbook to a Galaxy role for structural consistency
+with the rest of this account's Ansible repos — that is a mechanical/tooling change, not an
+endorsement of the install method. Don't add new features to the compose path; if this role sees
+real use, evaluate an AWX Operator rewrite instead (see README.md "Proposed follow-ups").
 
 ## Overview
 
-Vagrant lab + Ansible playbooks for deploying [Ansible AWX](https://github.com/ansible/awx) (open-source Ansible Tower) on Ubuntu 16.04. Spins up two VirtualBox VMs and provisions them with Ansible, Docker, and AWX.
+Ansible role (Galaxy: `jahrik.awx`) that installs Docker (via the `geerlingguy.docker`
+dependency), installs the Python Docker SDK packages the AWX installer's compose modules need,
+clones a pinned tag of `ansible/awx`, and runs its docker-compose installer. `playbook.yml` at the
+repo root is a thin wrapper that `include_role`s this role by directory, so
+`ansible-playbook playbook.yml` keeps working without the repo being checked out under a
+`roles/` path.
 
-## Lab Setup
+## Task Flow
 
-```bash
-vagrant up                          # start both VMs
-vagrant ssh ansible-awx             # SSH into the AWX host
-vagrant status                      # check VM state
-```
+`tasks/main.yml` dispatches to two files via `include_tasks` + `apply: tags:`, each independently
+tag-addressable (`awx:docker`, `awx:install`):
 
-| VM | IP | Purpose |
-|---|---|---|
-| `ansible-awx` | `192.168.33.11` | Hosts AWX |
-| `ansible-lab` | `192.168.33.12` | Test target |
+- `tasks/docker.yml` — installs the `docker`/`docker-compose` Python packages. Docker Engine
+  itself comes from the `geerlingguy.docker` role dependency in `meta/main.yml`, not from vendored
+  tasks here.
+- `tasks/awx.yml` — clones `awx_repo` at the pinned `awx_version` tag to `awx_dest`, checks
+  whether AWX is already responding on port 80, and runs the installer only if it isn't.
 
-## Playbooks
+## Conventions
 
-Run individually with `-l ansible-awx` to target the AWX host, or omit to run against all:
-
-```bash
-# Install Ansible 2.4+ via PPA
-ansible-playbook -i inventory.ini -l ansible-awx install_ansible.yml
-
-# Install Docker + pip + docker-py
-ansible-playbook -i inventory.ini -l ansible-awx install_docker.yml
-
-# Clone ansible/awx and run its installer (skips if port 80 already responds 200)
-ansible-playbook -i inventory.ini -l ansible-awx install_awx.yml
-
-# Run all three in sequence
-ansible-playbook -i inventory.ini playbook.yml
-```
-
-AWX UI: `http://192.168.33.11` — default credentials: `admin` / `password`
+- **Idempotency:** every active task must be safe to re-run; the installer command is guarded by
+  the port-80 health check so it doesn't re-run against a live AWX instance.
+- **Dependencies:** use `uv` for Python package management; do not use `pip` directly for
+  tooling. `ansible-galaxy install -r requirements.yml` pulls `geerlingguy.docker`.
+- **Facts:** use `ansible_facts['<fact>']`, never the bare `ansible_<fact>` magic vars;
+  `ansible.cfg` sets `inject_facts_as_vars = False`.
+- **FQCN:** all modules fully qualified (`ansible.builtin.*`).
+- **Pinning:** `awx_version` must stay pinned to a real tag — never revert to `devel`.
+- **General rules:** abide by the global `AGENTS.md` guidelines (no hardcoded secrets or IPs).
 
 ## Testing
 
 ```bash
 uv sync
 source .venv/bin/activate
+ansible-galaxy install -r requirements.yml
 yamllint .
 ansible-lint
-molecule test
+ansible-playbook playbook.yml --syntax-check
 ```
 
-## Notes
+## CI/CD
 
-- Targets Ubuntu 16.04 / Docker Engine (not Docker CE) — these are old but intentional for the lab
-- `install_docker.yml` uses the legacy `apt.dockerproject.org` repo — update if targeting a newer Ubuntu
-- `install_awx.yml` checks port 80 before running the AWX installer to avoid reinstalling
+- **lint** — `yamllint` + `ansible-lint` (profile `production`).
+- **syntax** — `ansible-playbook playbook.yml --syntax-check`. No Molecule/converge job: a real
+  convergence needs Docker-in-Docker plus a full docker-compose AWX stack, which is heavy and
+  targets an install method that's obsolete upstream. Lint + syntax-check is the honest CI gate
+  for this repo's current state.
+- **release** — `needs: [lint, syntax]`, publishes to Ansible Galaxy on merge to `main`.

@@ -1,0 +1,10 @@
+---
+# Repo/ref for the (obsolete) docker-compose-based AWX installer.
+awx_repo: https://github.com/ansible/awx.git
+awx_version: '9.3.0'
+awx_dest: /opt/awx
+
+# Python packages the AWX installer needs on top of Docker Engine.
+awx_docker_python_packages:
+  - docker
+  - docker-compose

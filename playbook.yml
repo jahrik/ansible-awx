@@ -1,4 +1,12 @@
 ---
-- import_playbook: install_ansible.yml
-- import_playbook: install_docker.yml
-- import_playbook: install_awx.yml
+# Thin wrapper: this repository is itself the ansible-awx role
+# (Galaxy-installable at the repo root). Including it by directory keeps
+# `ansible-playbook playbook.yml` working without requiring the repo to be
+# checked out under a roles/ path.
+- name: Deploy AWX
+  hosts: all
+  become: true
+  tasks:
+    - name: Include the awx role
+      ansible.builtin.include_role:
+        name: "{{ playbook_dir }}"
