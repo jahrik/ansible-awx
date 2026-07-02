@@ -1,0 +1,60 @@
+---
+name: CICD
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the codebase
+        uses: actions/checkout@v7
+      - name: Set up Python 3
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: uv sync
+      - name: Install Galaxy requirements
+        run: uv run ansible-galaxy install -r requirements.yml
+      - name: Lint code
+        run: uv run yamllint .
+      - name: Ansible lint
+        run: uv run ansible-lint
+
+  syntax:
+    name: Syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the codebase
+        uses: actions/checkout@v7
+      - name: Set up Python 3
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: uv sync
+      - name: Install Galaxy requirements
+        run: uv run ansible-galaxy install -r requirements.yml
+      - name: Syntax check
+        run: uv run ansible-playbook playbook.yml --syntax-check
+
+  release:
+    name: Release
+    needs: [lint, syntax]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: checkout
+        uses: actions/checkout@v7
+      - name: galaxy
+        uses: robertdebock/galaxy-action@1.2.1
+        with:
+          galaxy_api_key: ${{ secrets.GALAXY_API_KEY }}
+          git_branch: main

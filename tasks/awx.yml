@@ -1,0 +1,39 @@
+---
+# NOTE: this stages the legacy docker-compose-based AWX installer, which is
+# obsolete upstream in favor of the AWX Operator on Kubernetes. See
+# README.md / AGENTS.md for the obsolescence note before relying on this.
+
+- name: Clone AWX from GitHub
+  ansible.builtin.git:
+    repo: "{{ awx_repo }}"
+    dest: "{{ awx_dest }}"
+    version: "{{ awx_version }}"
+  tags:
+    - awx
+    - awx:install
+
+- name: Check if AWX is already responding on port 80
+  ansible.builtin.uri:
+    url: http://localhost:80
+  register: awx_check
+  ignore_errors: true
+  tags:
+    - awx
+    - awx:install
+
+- name: Show AWX health check status
+  ansible.builtin.debug:
+    var: awx_check.status
+  tags:
+    - awx
+    - awx:install
+
+- name: Run the AWX installer if it is not already responding on port 80
+  ansible.builtin.command: ansible-playbook -i inventory install.yml
+  args:
+    chdir: "{{ awx_dest }}/installer"
+  when: awx_check.status is not defined or awx_check.status != 200
+  changed_when: true
+  tags:
+    - awx
+    - awx:install

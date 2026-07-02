@@ -1,0 +1,22 @@
+---
+galaxy_info:
+  role_name: awx
+  namespace: jahrik
+  author: jahrik
+  description: >-
+    Stage Docker and the legacy docker-compose-based AWX installer on Ubuntu
+    (obsolete upstream -- see README.md for the AWX Operator note)
+  issue_tracker_url: https://github.com/jahrik/ansible-awx/issues
+  license: MIT
+  min_ansible_version: '2.16'
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+  galaxy_tags:
+    - awx
+    - ansible
+    - docker
+    - automation
+dependencies:
+  - role: geerlingguy.docker

@@ -1,0 +1,12 @@
+---
+# Docker Engine itself comes from the geerlingguy.docker role dependency
+# (see meta/main.yml). All that's left here is the Python Docker SDK that
+# the AWX installer's docker-compose-based playbook needs at runtime.
+
+- name: Install Python Docker SDK required by the AWX installer
+  ansible.builtin.pip:
+    name: "{{ awx_docker_python_packages }}"
+    state: present
+  tags:
+    - awx
+    - awx:docker

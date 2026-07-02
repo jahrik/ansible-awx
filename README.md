@@ -1,69 +1,77 @@
-# Ansible AWX Lab
+# jahrik.awx
 
-Vagrant lab and Ansible playbooks for deploying [Ansible AWX](https://github.com/ansible/awx) in a local testing environment.
+[![CI/CD](https://github.com/jahrik/ansible-awx/actions/workflows/cicd.yml/badge.svg)](https://github.com/jahrik/ansible-awx/actions/workflows/cicd.yml)
+[![Ansible Galaxy](https://img.shields.io/badge/ansible--galaxy-jahrik.awx-blue?logo=ansible)](https://galaxy.ansible.com/ui/standalone/roles/jahrik/awx/)
 
-This repository spins up two Ubuntu 16.04 VirtualBox VMs using Vagrant, and configures them with Docker, Ansible, and AWX.
+> [!WARNING]
+> **This role is obsolete upstream.** It stages the legacy docker-compose-based AWX installer
+> (`ansible/awx` -> `installer/install.yml`), which the AWX project has replaced with the
+> [AWX Operator](https://github.com/ansible/awx-operator) running on Kubernetes. This role is
+> converted to a Galaxy role for structural consistency with the rest of this account's Ansible
+> repos, not as an endorsement of the compose-based install path. See **Proposed follow-ups**
+> below.
 
-## Requirements
+Installs Docker, clones a pinned tag of [AWX](https://github.com/ansible/awx), and runs its
+docker-compose installer on Ubuntu.
 
-- Vagrant
-- VirtualBox
+## Usage
 
-## Lab Setup
+Include the role in your playbook:
 
-Spin up the lab VMs:
-
-```bash
-vagrant up
-vagrant status
+```yaml
+- hosts: all
+  become: true
+  roles:
+    - jahrik.awx
 ```
 
-| VM | IP | Purpose |
+Or run the bundled thin wrapper directly:
+
+```bash
+ansible-galaxy install -r requirements.yml
+ansible-playbook playbook.yml
+```
+
+AWX will be reachable at `http://<host>` once the installer finishes.
+
+## Variables
+
+Key variables (see `defaults/main.yml` for the full list):
+
+| Variable | Default | Description |
 |---|---|---|
-| `ansible-awx` | `192.168.33.11` | Hosts the AWX installation |
-| `ansible-lab` | `192.168.33.12` | General lab testing target |
+| `awx_repo` | `https://github.com/ansible/awx.git` | Repo cloned to `awx_dest`. |
+| `awx_version` | `9.3.0` | Pinned tag checked out (was unpinned `devel` before this conversion). |
+| `awx_dest` | `/opt/awx` | Clone destination. |
+| `awx_docker_python_packages` | `[docker, docker-compose]` | Python packages the installer's compose modules need. |
 
-SSH into a node:
-
-```bash
-vagrant ssh ansible-awx
-```
-
-## Deployment
-
-Playbooks are provided to provision the lab nodes.
-
-Run the full stack deployment on all nodes:
-
-```bash
-ansible-playbook -i inventory.ini playbook.yml
-```
-
-Alternatively, run individual steps on a specific node (e.g., `ansible-awx`):
-
-```bash
-# 1. Install Ansible
-ansible-playbook -i inventory.ini -l ansible-awx install_ansible.yml
-
-# 2. Install Docker
-ansible-playbook -i inventory.ini -l ansible-awx install_docker.yml
-
-# 3. Install and start AWX
-ansible-playbook -i inventory.ini -l ansible-awx install_awx.yml
-```
-
-### Accessing AWX
-
-- URL: `http://192.168.33.11`
-- Username: `admin`
-- Password: `password`
+Docker Engine itself is provided by the `geerlingguy.docker` role dependency (see `meta/main.yml`
+and `requirements.yml`), not vendored here.
 
 ## Testing
 
 ```bash
 uv sync
 source .venv/bin/activate
+ansible-galaxy install -r requirements.yml
 yamllint .
 ansible-lint
-molecule test
+ansible-playbook playbook.yml --syntax-check
 ```
+
+CI runs lint and a syntax check only — see [AGENTS.md](AGENTS.md) for why.
+
+## Proposed follow-ups
+
+- Evaluate replacing this role's approach entirely with the
+  [AWX Operator](https://github.com/ansible/awx-operator) on Kubernetes/k3s, which is the
+  currently supported way to run AWX.
+- Alternatively, archive this repo if there's no active use case for a compose-based AWX install.
+
+## License
+
+MIT
+
+## Author
+
+jahrik@gmail.com

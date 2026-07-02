@@ -1,2 +1,3 @@
-awx/
-.vagrant/
+.ansible/
+.venv/
+*.retry
